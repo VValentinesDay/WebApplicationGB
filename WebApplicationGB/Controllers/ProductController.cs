@@ -1,7 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Text;
+using WebApplicationGB.Abstractions;
 using WebApplicationGB.Data;
+using WebApplicationGB.DTO;
 using WebApplicationGB.Models;
+using WebApplicationGB.Repository;
 
 namespace WebApplicationGB.Controllers
 {
@@ -9,74 +14,67 @@ namespace WebApplicationGB.Controllers
     [Route("[Controller]")] // Переброска на этот контроллер будет происходить по имени контроллера
     public class ProductController : ControllerBase
     {
+        private readonly IProductRepository _productRepository;
 
-
-        // Добавление продуктов в БД
-
-        // контроллеры возвращают либо ActionResult либоо IActionResult
-        [HttpPost]
-        public ActionResult<int> AddProduct(string name, string discr, int price)
+        public ProductController(IProductRepository productRepository)
         {
-            // здесь using используется чтобы закрывать соединение
-            using (Context context = new Context()) 
-            {
-                if (context.Products.Any(p => p.Name == name)) return StatusCode(409);
+            _productRepository = productRepository;
+        }
 
-                var product = new Product { Name = name, Description = discr, Price = price };
-                context.Products.Add(product);
-                context.SaveChanges(); // после создания объекта приянто возвращать ID. SaveChanges даёт доступ к ID
-                return Ok(product.Id);
+
+        [HttpPost]
+        public ActionResult<int> AddProduct(ProductDTO productDTO)
+        {
+            try
+            {
+                var product = _productRepository.AddProduct(productDTO);
+                return Ok(product);
+            }
+            catch (Exception exception)
+            {
+                return StatusCode(409);
             }
         }
+
         // Получение всех продуктов
         [HttpGet("get_product")]
-        public ActionResult<IEnumerable<Product>> GetProducts()
+        public ActionResult<IEnumerable<ProductDTO>> GetProducts()
         {
-           IEnumerable<Product> products;
-            // здесь using используется чтобы закрывать соединение
-            using (Context context = new Context())
-            {
-                products = context.Products.Select(p=>new Product {Name = p.Name, Description =  p.Description, Price = p.Price}).ToList();
-                // пока не выбрано приведение в какому-то типу как выше ToList будет существовать только запрос. Если смотреть по тексту,
-                // то IEnumerable нельзя вернуть в качестве объекта(почему так??)
-
-                // метод неплохо сделать асинхронным чтобы не процесс е ждал выгрузки
-                return Ok(products);
-
-            }
-
+            return Ok(_productRepository.GetProducts());
         }
+
+
         [HttpDelete("delete_product")]
-        public ActionResult<string> DeleteProduct(string name) 
+        public ActionResult<string> DeleteProduct(string name)
         {
-            using (Context context = new Context()) 
-            {
-                if (context.Products.Any(p => p.Name == name)) 
-                {
-                    context.Products.Where(p => p.Name == name).ExecuteDelete();
-
-                    return Ok(name + " - продукт удалён");
-                   }
-
-                else return "Продукт не найден";
-                
-            }
+            return _productRepository.DeleteProduct(name);
         }
 
         [HttpPatch("change_price")]
-        public ActionResult<string> ChangePrice(string name, int price) 
+        public ActionResult<string> ChangePrice(string name, decimal price)
         {
-            using (Context context = new Context()) 
+            using (Context context = new Context())
             {
-                if (context.Products.Any(p => p.Name == name))
-                {
-                    context.Products.Where(p => p.Name == name).ExecuteUpdate(p => p.SetProperty(p => p.Price, p => price));
-                    return Ok($"Цена продукта {name} теперь составляет: {price}");
-                }
-                else {
-                    return StatusCode(404);
-                }
+
+                _productRepository.ChangePrice(name, price);
+                return Ok($"Цена продукта {name} теперь составляет: {price}");
+     
             }
+        }
+
+
+        [HttpGet(template: "GetCsvProducts")]
+        public FileContentResult GetCsvProducts()
+        {
+            var productList = _productRepository.GetProducts().ToList();
+            StringBuilder listForCvs = new StringBuilder();
+
+            foreach (var product in productList)
+            {
+                listForCvs.AppendLine("ID: " + product.Id + ", Наименование: " + product.Name + ", Цена: " +
+                product.Price + ", Описание: " + product.Description + "\n");
+            }
+            return File(new System.Text.UTF8Encoding().GetBytes(listForCvs.ToString()), "text/csv", "report.csv");
         }
     }
 }

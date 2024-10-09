@@ -43,8 +43,8 @@ namespace WebApplicationGB.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<int>("Price")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(65,30)");
 
                     b.Property<int?>("ProductGroupID")
                         .HasColumnType("int");

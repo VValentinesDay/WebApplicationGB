@@ -11,20 +11,22 @@ namespace WebApplicationGB.Data
         public virtual DbSet<ProductGroup> ProductGroup { get; set; }
         public virtual DbSet<Storage> Storages { get; set; }
 
-        // переопределение методов
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.
 
-        //    UseSqlServer("Data source = master; Initial Catalog = WebAppGB;" +
-        //    " Trusted_Connection = True; TrustServerCertificate = True").
-        //    UseLazyLoadingProxies().LogTo(Console.WriteLine);
-        //// здесь Console.WriteLine используется как делегат
-        /// <summary>
 
-        // string connectionString = "server=WebAppServer;user=root;password=22022202";
-        string connectionString = "Server=localhost; Port=3306; Database=test; Uid=root; Pwd=22022202;";
+
+
+        private readonly string _dbConnectionString;
+        public Context() { }
+        public Context(string connection ) 
+        {
+            _dbConnectionString = connection;
+        }
+
+
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.
-            UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)).UseLazyLoadingProxies().LogTo(Console.WriteLine);
+            UseMySql(_dbConnectionString, ServerVersion.AutoDetect(_dbConnectionString)).UseLazyLoadingProxies().LogTo(Console.WriteLine);
         // здесь Console.WriteLine используется как делегат
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
