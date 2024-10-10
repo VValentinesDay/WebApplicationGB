@@ -1,5 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.FileProviders;
 using WebApplicationGB.Abstractions;
 using WebApplicationGB.Automapper;
 using WebApplicationGB.Data;
@@ -40,6 +42,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Работа со статичными файлами
+var staticFilePath = Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles");
+Directory.CreateDirectory(staticFilePath);
+
+app.UseStaticFiles( new StaticFileOptions 
+{
+    FileProvider = new PhysicalFileProvider(staticFilePath),
+    RequestPath = "/static"
+}
+   );
 
 app.UseHttpsRedirection();
 

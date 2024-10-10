@@ -90,10 +90,20 @@ namespace WebApplicationGB.Repository
         {
             if (!context.Products.Any(p => p.Name == name))
                 throw new Exception("Такого продукта не существует");
-                // вряд ли есть необходимсоть в аutomapper, т.к. пользователь меняет данные в БД и ничего не получает
-                context.Products.Where(p => p.Name == name).ExecuteUpdate(p => p.SetProperty(p => p.Price, p => price));
-                _cache.Remove("products");
-                return ($"Цена продукта {name} теперь составляет: {price}");
+            // вряд ли есть необходимсоть в аutomapper, т.к. пользователь меняет данные в БД и ничего не получает
+            context.Products.Where(p => p.Name == name).ExecuteUpdate(p => p.SetProperty(p => p.Price, p => price));
+            _cache.Remove("products");
+            return ($"Цена продукта {name} теперь составляет: {price}");
+        }
+
+        public string GetCacheStat()
+        {
+            var content = _cache.GetCurrentStatistics();
+
+            string result = "TotalHits: " + content.TotalHits.ToString() +
+                            ", TotalMisses: " + content.TotalMisses.ToString() + 
+                            ", CurrentEntryCount: " + content.CurrentEntryCount .ToString();
+            return result;
         }
     }
 }

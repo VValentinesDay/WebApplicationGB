@@ -10,5 +10,7 @@ namespace WebApplicationGB.Abstractions
         int AddProduct(ProductDTO productDTO);
         string DeleteProduct(string name);
         string ChangePrice(string name, decimal price);
+
+        string GetCacheStat();
     } 
 }

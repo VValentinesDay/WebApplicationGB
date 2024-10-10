@@ -76,5 +76,21 @@ namespace WebApplicationGB.Controllers
             }
             return File(new System.Text.UTF8Encoding().GetBytes(listForCvs.ToString()), "text/csv", "report.csv");
         }
+
+
+
+        [HttpGet(template: "GetCacheStatistic")]
+        public string GetStatistic()
+        {
+            // в интерфейс добавлен метода, который при реализации должен возвращать строку
+            // с некоторыми полями кэша
+            var content = _productRepository.GetCacheStat();
+
+            string fileName = "CacheStatistic" + ".csv";
+            System.IO.File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles", fileName), content);
+            // метод возвращает ссылку, перейдя по которой можно будет получить файл
+            return "https://"+Request.Host.ToString()+ "/static/" + fileName; 
+        }
+
     }
 }
